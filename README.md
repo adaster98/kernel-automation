@@ -1,6 +1,7 @@
 # kernel-automation
 A personal script for automating gentoo kernel building
 
+<img width="839" height="707" alt="Screenshot_20260121_154033" src="https://github.com/user-attachments/assets/4ee71b22-8c81-4d77-8971-ccc73e6627da" />
 
 
 - There is a config file where lotsa stuff can be set like gpu vendor(s)
