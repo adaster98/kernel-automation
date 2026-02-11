@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# ==========================================
-# GENTOO KERNEL BUILDER
-# ==========================================
-
 # 1. TRAP: Ensure terminal resets to normal on exit
 trap 'echo -ne "\e[r"; tput cup 9999 0; tput cnorm' EXIT
 
@@ -111,7 +107,7 @@ print_info_header() {
     if [[ -n "$HAS_INITRD" ]]; then
         echo -e "Initramfs:      ${BLUE}$INITRAMFS_TOOL${RESET}"
     else
-        echo -e "Initramfs:      ${YELLOW}disabled in .config${RESET}"
+        echo -e "Initramfs:      ${YELLOW}Disabled${RESET}"
     fi
     echo ""
 }
@@ -280,6 +276,24 @@ EOF
             echo "    kernel_cmdline: root=PARTUUID=${ROOT_PARTUUID} ${KERNEL_CMDLINE}"
         } >> "$limine_conf"
         echo -e "${BLUE}${BOLD}INFO: ${RESET}Limine configuration updated."
+
+    elif [[ "$BOOTLOADER" == "asterboot" ]]; then
+        local entry_file="$ESP_DIR/asterboot/slots/$kernelRelease.conf"
+        mkdir -p "$(dirname "$entry_file")"
+
+        echo -e "Creating AsterBoot entry: $entry_file"
+
+        cat <<EOF > "$entry_file"
+TITLE=Gentoo Linux
+VERSION=$kernelRelease
+KERNEL=\\vmlinuz-$kernelRelease.efi
+EOF
+        if [[ -f "$ESP_DIR/initramfs-$kernelRelease.img" ]]; then
+            echo "INITRD=\\initramfs-$kernelRelease.img" >> "$entry_file"
+        fi
+
+        echo "PARAMS=root=PARTUUID=${ROOT_PARTUUID} ${KERNEL_CMDLINE}" >> "$entry_file"
+        echo -e "${BLUE}${BOLD}INFO: ${RESET}AsterBoot entry created at $entry_file"
     fi
 }
 
@@ -315,7 +329,7 @@ for i in "${!JOB_NAMES[@]}"; do
     # Run the function
     cmd="${JOB_CMDS[$i]}"
 
-    # We pipe the ENTIRE function execution to tee
+    # Pipe the ENTIRE function execution to tee
     # Because pipefail is ON, if $cmd fails, the whole statement fails.
     if $cmd 2>&1 | tee -a "$LOG_FILE"; then
         # Update Status to Done [✓]
